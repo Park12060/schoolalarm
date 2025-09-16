@@ -12,6 +12,24 @@ interface CalendarEvent {
 }
 
 function Calender() {
+    const kakaoid = import.meta.env.VITE_KAKAO_ID;
+    const kakao = new window.Kakao;
+    kakao.init(kakaoid);
+    kakao.isInitialized();
+    const handleloginClick=()=>{
+        kakao.Auth.authorize({
+            redirectUri: "https://park12060.github.io"
+        })
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        if (code){
+            localStorage.setItem("code",code);
+            kakao.Auth.setAccessToken(code);
+        }
+
+    }
+
+
     const getContext = (): CalendarEvent[] => {
         const savedContext = localStorage.getItem("context");
         return savedContext ? JSON.parse(savedContext) : [];
@@ -49,6 +67,7 @@ function Calender() {
 
     return (
         <div>
+
             <h1>Calendar</h1>
             <h2> {mode === 0 ? "추가 모드" : "삭제 모드"}</h2>
             <FullCalendar
@@ -66,6 +85,12 @@ function Calender() {
             <button onClick={handleButtonClick}>
                 모드 변경
             </button>
+            <button onClick={handleloginClick}>
+                로그인
+            </button>
+
+
+
         </div>
     )
 }
