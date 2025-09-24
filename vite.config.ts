@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
     server:{
         proxy:{
-            "/auth":{
+            "/back":{
                 target: "178.128.3.209",
                 changeOrigin: true,
             }
