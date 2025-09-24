@@ -7,7 +7,7 @@ export default defineConfig({
     server:{
         proxy:{
             "/back":{
-                target: "178.128.3.209",
+                target: "162.159.140.98",
                 changeOrigin: true,
             }
         }

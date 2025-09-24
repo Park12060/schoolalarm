@@ -4,72 +4,57 @@ import './App.css';
 import { useNavigate } from 'react-router-dom';
 import kakaoLoginImage from './assets/kakao_login_large_narrow.png'; // 이미지를 import 합니다.
 
-// 카카오 SDK 타입을 공식 문서를 참고하여 상세하게 정의합니다.
+// --- 카카오 SDK 타입 정의 ---
 interface KakaoAuth {
-    authorize(options: {
-        redirectUri: string;
-        state?: string;
-        scope?: string;
-        prompt?: string;
-    }): void;
+    authorize(options: { redirectUri: string; state?: string; scope?: string; prompt?: string; }): void;
     getAccessToken(): string | null;
     setAccessToken(token: string): void;
     getStatusInfo(callback: (statusInfo: unknown) => void): void;
 }
+interface KakaoAPI { request(options: { url: string; data?: unknown; success?: (response: unknown) => void; fail?: (error: unknown) => void; }): Promise<unknown>; }
+interface KakaoSDK { init(apiKey: string): void; isInitialized(): boolean; Auth: KakaoAuth; API: KakaoAPI; }
+declare global { interface Window { Kakao: KakaoSDK; } }
 
-interface KakaoAPI {
-    request(options: {
-        url: string;
-        data?: unknown;
-        success?: (response: unknown) => void;
-        fail?: (error: unknown) => void;
-    }): Promise<unknown>;
-}
+// --- 애플리케이션 실행 시 즉시 카카오 SDK 초기화 ---
+const kakaoid = import.meta.env.VITE_KAKAO_ID;
+console.log('VITE_KAKAO_ID:', kakaoid);
+if (kakaoid) {
+    const script = document.createElement('script');
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.8/kakao.min.js';
+    script.integrity = 'sha384-WUSirVbD0ASvo37f3qQZuDap8wy76aJjmGyXKOYgPL/NdAs8HhgmPlk9dz2XQsNv';
+    script.crossOrigin = 'anonymous';
+    script.async = false; // 동기적으로 실행하여 SDK를 즉시 사용할 수 있도록 설정
 
-interface KakaoSDK {
-    init(apiKey: string): void;
-    isInitialized(): boolean;
-    Auth: KakaoAuth;
-    API: KakaoAPI;
+    script.onload = () => {
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+            console.log('Kakao.init()을 호출합니다.');
+            window.Kakao.init(kakaoid);
+            console.log('Kakao.isInitialized() after init:', window.Kakao.isInitialized());
+        }
+    };
+    document.head.appendChild(script);
+} else {
+    console.error('VITE_KAKAO_ID가 정의되지 않았습니다. .env 파일을 확인해주세요.');
 }
-
-declare global {
-    interface Window {
-        Kakao: KakaoSDK;
-    }
-}
+// -----------------------------------------------------
 
 function App() {
     const navigate = useNavigate();
 
-    // Kakao SDK 스크립트 로드
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.8/kakao.min.js';
-        script.integrity = 'sha384-WUSirVbD0ASvo37f3qQZuDap8wy76aJjmGyXKOYgPL/NdAs8HhgmPlk9dz2XQsNv';
-        script.crossOrigin = 'anonymous';
-        script.async = true;
-        document.head.appendChild(script);
-
-        script.onload = () => {
-            if (window.Kakao) {
-                const kakaoid = import.meta.env.VITE_KAKAO_ID;
-                if (kakaoid && !window.Kakao.isInitialized()) {
-                    window.Kakao.init(kakaoid);
-                }
-            }
-        };
-
-        return () => {
-            document.head.removeChild(script);
-        };
-    }, []);
-
     const handleLoginClick = () => {
+        console.log('handleLoginClick 함수 호출됨');
+        console.log('window.Kakao 객체:', window.Kakao);
+        if (window.Kakao) {
+            console.log('Kakao.isInitialized():', window.Kakao.isInitialized());
+        }
+
         if (window.Kakao && window.Kakao.isInitialized()) {
+            console.log('Kakao.Auth.authorize()를 호출합니다.');
             window.Kakao.Auth.authorize({
                 redirectUri: "/back"
             });
+        } else {
+            console.error('카카오 SDK가 초기화되지 않았거나, 로그인 함수를 호출할 수 없습니다.');
         }
     };
 

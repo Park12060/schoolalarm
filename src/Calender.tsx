@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, ChangeEvent } from "react";
+import  { useEffect, useState, type ChangeEvent } from "react";
 import './App.css'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
