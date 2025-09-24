@@ -68,7 +68,7 @@ function App() {
     const handleLoginClick = () => {
         if (window.Kakao && window.Kakao.isInitialized()) {
             window.Kakao.Auth.authorize({
-                redirectUri: window.location.origin
+                redirectUri: "/back"
             });
         }
     };
