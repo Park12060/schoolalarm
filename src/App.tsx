@@ -34,7 +34,7 @@ if (kakaoid) {
     };
     document.head.appendChild(script);
 } else {
-    console.error('VITE_KAKAO_ID가 정의되지 않았습니다. .env 파일을 확인해주세요.');
+    console.error('VITE_KAKAO_ID가 정의되지 않았습니다. .env.local 파일을 확인해주세요.');
 }
 // -----------------------------------------------------
 

@@ -19,7 +19,7 @@ function Login() {
     };
 
     const handleLogin = () => {
-        // .env 파일에 정의된 관리자 비밀번호와 비교합니다.
+        // .env.local 파일에 정의된 관리자 비밀번호와 비교합니다.
         if (password === import.meta.env.VITE_ADMIN_KEY) {
             // 로그인 성공 시, 선택된 반 정보를 state와 함께 캘린더 페이지로 전달합니다.
             navigate('/calender', { state: { className: selectedClass } });
