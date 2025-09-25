@@ -1,5 +1,6 @@
 
-import  { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import './App.css'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -16,25 +17,50 @@ interface ErrorResponse {
     message: string;
 }
 
+// 전체 캘린더 데이터를 위한 타입 정의
+interface AllCalendarData {
+    [className: string]: CalendarEvent[];
+}
+
 function Calender() {
-    const getContext = (): CalendarEvent[] => {
-        const savedContext = localStorage.getItem("context");
-        if (!savedContext) return [];
+    const location = useLocation();
+    const navigate = useNavigate();
+    const className = location.state?.className as string;
+
+    // 반 정보가 없으면 로그인 페이지로 리디렉션
+    useEffect(() => {
+        if (!className) {
+            alert("잘못된 접근입니다. 로그인 페이지로 이동합니다.");
+            navigate('/login');
+        }
+    }, [className, navigate]);
+
+    // 특정 반의 데이터를 localStorage에서 가져오는 함수
+    const getClassContext = (currentClass: string): CalendarEvent[] => {
+        const allDataString = localStorage.getItem("allCalendarData");
+        if (!allDataString) return [];
         try {
-            return JSON.parse(savedContext);
+            const allData: AllCalendarData = JSON.parse(allDataString);
+            return allData[currentClass] || [];
         } catch (error) {
-            console.error("Error parsing context from localStorage:", error);
+            console.error("Error parsing allCalendarData from localStorage:", error);
             return [];
         }
     }
 
-    const [context, setContext] = useState<CalendarEvent[]>(getContext);
+    const [context, setContext] = useState<CalendarEvent[]>(() => getClassContext(className));
     const [inputValue, setInputValue] = useState('');
     const [mode, setMode] = useState(0); // 0: add, 1: delete
 
+    // 현재 반의 데이터가 변경될 때마다 localStorage에 저장
     useEffect(() => {
-        localStorage.setItem("context", JSON.stringify(context));
-    }, [context]);
+        if (!className) return; // className이 없으면 저장하지 않음
+
+        const allDataString = localStorage.getItem("allCalendarData");
+        const allData: AllCalendarData = allDataString ? JSON.parse(allDataString) : {};
+        allData[className] = context;
+        localStorage.setItem("allCalendarData", JSON.stringify(allData));
+    }, [context, className]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -65,25 +91,31 @@ function Calender() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(context),
+                // 서버에 보낼 때 어떤 반의 데이터인지 함께 보냅니다.
+                body: JSON.stringify({ className, events: context }),
             });
 
             if (response.ok) {
-                alert('Calendar saved successfully!');
+                alert(`[${className}] 캘린더가 성공적으로 저장되었습니다!`);
             } else {
                 const errorData: ErrorResponse | null = await response.json().catch(() => null);
-                const errorMessage = errorData?.message || 'Failed to save calendar.';
+                const errorMessage = errorData?.message || '캘린더 저장에 실패했습니다.';
                 alert(errorMessage);
             }
         } catch (error) {
             console.error('Error saving calendar:', error);
-            alert('An error occurred while saving the calendar.');
+            alert('캘린더 저장 중 오류가 발생했습니다.');
         }
     };
 
+    // className이 없는 경우 렌더링을 방지
+    if (!className) {
+        return <div>로그인 페이지로 이동 중...</div>;
+    }
+
     return (
         <div>
-            <h1>Calendar</h1>
+            <h1>{className} 캘린더 관리</h1>
             <h2> {mode === 0 ? "추가 모드" : "삭제 모드"}</h2>
             <FullCalendar
                 plugins={[dayGridPlugin, interactionPlugin]}
@@ -101,7 +133,7 @@ function Calender() {
                 모드 변경
             </button>
             <button onClick={handleSaveToServer}>
-                Save to Server
+                서버에 저장
             </button>
         </div>
     )
