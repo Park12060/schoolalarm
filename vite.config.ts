@@ -7,7 +7,7 @@ export default defineConfig({
     server:{
         proxy:{
             "/back":{
-                target: "162.159.140.98",
+                target: "https://alarmback-f9vr6.ondigitalocean.app/",
                 changeOrigin: true,
             }
         }

@@ -51,7 +51,7 @@ function App() {
         if (window.Kakao && window.Kakao.isInitialized()) {
             console.log('Kakao.Auth.authorize()를 호출합니다.');
             window.Kakao.Auth.authorize({
-                redirectUri: "https://schoolback.me/back"
+                redirectUri: "https://alarmback-f9vr6.ondigitalocean.app/"
             });
         } else {
             console.error('카카오 SDK가 초기화되지 않았거나, 로그인 함수를 호출할 수 없습니다.');
