@@ -29,7 +29,7 @@ function LoginSuccess() {
 
         try {
             // 중요: 이 URL을 실제 백엔드 엔드포인트로 수정해야 합니다.
-            const response = await fetch('/back/register-user', {
+            const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/register-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ function DeleteAccount() {
 
     const handleDelete = async () => {
         try {
-            const response = await fetch('/back/withdraw', {
+            const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/withdraw', {
                 method: 'POST',
                 // 브라우저가 세션 쿠키를 자동으로 전송하므로 헤더는 비워둡니다.
                 // 요청 본문(body)도 비어 있어야 합니다.
