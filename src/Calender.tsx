@@ -86,7 +86,7 @@ function Calender() {
 
     const handleSaveToServer = async () => {
         try {
-            const response = await fetch('/back/calender', { // 백엔드 엔드포인트
+            const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/calender', { // 백엔드 엔드포인트
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
