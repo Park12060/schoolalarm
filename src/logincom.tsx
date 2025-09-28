@@ -42,7 +42,6 @@ function LoginSuccess() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'origin': "https://schoolalarm-5z2et.ondigitalocean.app"
                 },
                 body: JSON.stringify({
                     userId: userId,
