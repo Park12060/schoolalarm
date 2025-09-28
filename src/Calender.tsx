@@ -27,6 +27,10 @@ function Calender() {
     const navigate = useNavigate();
     const className = location.state?.className as string;
 
+    const [context, setContext] = useState<CalendarEvent[]>([]);
+    const [inputValue, setInputValue] = useState('');
+    const [mode, setMode] = useState(0); // 0: add, 1: delete
+
     // 반 정보가 없으면 로그인 페이지로 리디렉션
     useEffect(() => {
         if (!className) {
@@ -35,32 +39,30 @@ function Calender() {
         }
     }, [className, navigate]);
 
-    // 특정 반의 데이터를 localStorage에서 가져오는 함수
-    const getClassContext = (currentClass: string): CalendarEvent[] => {
-        const allDataString = localStorage.getItem("allCalendarData");
-        if (!allDataString) return [];
-        try {
-            const allData: AllCalendarData = JSON.parse(allDataString);
-            return allData[currentClass] || [];
-        } catch (error) {
-            console.error("Error parsing allCalendarData from localStorage:", error);
-            return [];
-        }
-    }
-
-    const [context, setContext] = useState<CalendarEvent[]>(() => getClassContext(className));
-    const [inputValue, setInputValue] = useState('');
-    const [mode, setMode] = useState(0); // 0: add, 1: delete
-
-    // 현재 반의 데이터가 변경될 때마다 localStorage에 저장
+    // 컴포넌트가 마운트되거나 className이 변경될 때 서버에서 캘린더 데이터를 가져옵니다.
     useEffect(() => {
-        if (!className) return; // className이 없으면 저장하지 않음
+        if (!className) return;
 
-        const allDataString = localStorage.getItem("allCalendarData");
-        const allData: AllCalendarData = allDataString ? JSON.parse(allDataString) : {};
-        allData[className] = context;
-        localStorage.setItem("allCalendarData", JSON.stringify(allData));
-    }, [context, className]);
+        const fetchCalendarData = async () => {
+            try {
+                const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/calender');
+                if (response.ok) {
+                    const allData: AllCalendarData = await response.json();
+                    // 현재 반에 해당하는 데이터만 상태에 설정합니다.
+                    setContext(allData[className] || []);
+                } else {
+                    console.error('Failed to fetch calendar data');
+                    // 데이터를 가져오지 못했을 경우 빈 배열로 설정
+                    setContext([]);
+                }
+            } catch (error) {
+                console.error('Error fetching calendar data:', error);
+                setContext([]);
+            }
+        };
+
+        fetchCalendarData();
+    }, [className]); // className이 변경될 때마다 데이터를 다시 가져옵니다.
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -76,15 +78,19 @@ function Calender() {
                 alert('내용을 입력해주세요.');
                 return;
             }
-            setContext([...context, {id: arg.dateStr, title: inputValue, date: arg.dateStr}]);
+            // 새 이벤트를 로컬 상태에 추가합니다.
+            const newEvent = {id: arg.dateStr, title: inputValue, date: arg.dateStr};
+            setContext([...context, newEvent]);
             setInputValue('');
         } else { // Delete mode
+            // 로컬 상태에서 이벤트를 제거합니다.
             const updatedContext = context.filter((event) => event.id !== arg.dateStr);
             setContext(updatedContext);
         }
     }
 
     const handleSaveToServer = async () => {
+        if (!className) return;
         try {
             const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/calender', { // 백엔드 엔드포인트
                 method: 'POST',
