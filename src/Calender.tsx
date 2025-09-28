@@ -96,6 +96,7 @@ function Calender() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'origin': "https://schoolalarm-5z2et.ondigitalocean.app"
                 },
                 // 서버에 보낼 때 어떤 반의 데이터인지 함께 보냅니다.
                 body: JSON.stringify({ className, events: context }),
