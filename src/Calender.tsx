@@ -5,6 +5,7 @@ import './App.css'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin, {type DateClickArg} from "@fullcalendar/interaction"
+import axios from 'axios';
 
 interface CalendarEvent {
     id: string;
@@ -45,16 +46,9 @@ function Calender() {
 
         const fetchCalendarData = async () => {
             try {
-                const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/calender');
-                if (response.ok) {
-                    const allData: AllCalendarData = await response.json();
-                    // 현재 반에 해당하는 데이터만 상태에 설정합니다.
-                    setContext(allData[className] || []);
-                } else {
-                    console.error('Failed to fetch calendar data');
-                    // 데이터를 가져오지 못했을 경우 빈 배열로 설정
-                    setContext([]);
-                }
+                const response = await axios.get<AllCalendarData>('https://alarmback-f9vr6.ondigitalocean.app/calender');
+                const allData = response.data;
+                setContext(allData[className] || []);
             } catch (error) {
                 console.error('Error fetching calendar data:', error);
                 setContext([]);
@@ -62,7 +56,7 @@ function Calender() {
         };
 
         fetchCalendarData();
-    }, [className]); // className이 변경될 때마다 데이터를 다시 가져옵니다.
+    }, [className]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -78,12 +72,10 @@ function Calender() {
                 alert('내용을 입력해주세요.');
                 return;
             }
-            // 새 이벤트를 로컬 상태에 추가합니다.
             const newEvent = {id: arg.dateStr, title: inputValue, date: arg.dateStr};
             setContext([...context, newEvent]);
             setInputValue('');
         } else { // Delete mode
-            // 로컬 상태에서 이벤트를 제거합니다.
             const updatedContext = context.filter((event) => event.id !== arg.dateStr);
             setContext(updatedContext);
         }
@@ -92,25 +84,19 @@ function Calender() {
     const handleSaveToServer = async () => {
         if (!className) return;
         try {
-            const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/calender', { // 백엔드 엔드포인트
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                // 서버에 보낼 때 어떤 반의 데이터인지 함께 보냅니다.
-                body: JSON.stringify({ className, events: context }),
+            await axios.post('https://alarmback-f9vr6.ondigitalocean.app/calender', {
+                className,
+                events: context
             });
-
-            if (response.ok) {
-                alert(`[${className}] 캘린더가 성공적으로 저장되었습니다!`);
-            } else {
-                const errorData: ErrorResponse | null = await response.json().catch(() => null);
-                const errorMessage = errorData?.message || '캘린더 저장에 실패했습니다.';
-                alert(errorMessage);
-            }
+            alert(`[${className}] 캘린더가 성공적으로 저장되었습니다!`);
         } catch (error) {
             console.error('Error saving calendar:', error);
-            alert('캘린더 저장 중 오류가 발생했습니다.');
+            let errorMessage = '캘린더 저장에 실패했습니다.';
+            if (axios.isAxiosError(error) && error.response) {
+                const errorData: ErrorResponse | null = error.response.data;
+                errorMessage = errorData?.message || errorMessage;
+            }
+            alert(errorMessage);
         }
     };
 

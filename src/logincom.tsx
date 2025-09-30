@@ -1,6 +1,7 @@
 
 import { useState, type ChangeEvent, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 // 1반부터 12반까지의 배열을 동적으로 생성합니다.
 const classes = Array.from({ length: 12 }, (_, i) => `${i + 1}반`);
@@ -37,30 +38,22 @@ function LoginSuccess() {
         }
 
         try {
-            // 중요: 이 URL을 실제 백엔드 엔드포인트로 수정해야 합니다.
-            const response = await fetch('https://alarmback-f9vr6.ondigitalocean.app/register-user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    className: selectedClass,
-                }),
+            await axios.post('https://alarmback-f9vr6.ondigitalocean.app/register-user', {
+                userId: userId,
+                className: selectedClass,
             });
 
-            if (response.ok) {
-                alert(`[${selectedClass}]으로 등록이 완료되었습니다! 이제부터 서비스를 이용하실 수 있습니다.`);
-                // 등록 성공 후, 사용자를 서비스 메인 페이지 등으로 보낼 수 있습니다.
-                navigate('/calender');
-            } else {
-                const errorData: ErrorResponse | null = await response.json().catch(() => null);
-                const errorMessage = errorData?.message || '등록에 실패했습니다.';
-                alert(errorMessage);
-            }
+            alert(`[${selectedClass}]으로 등록이 완료되었습니다! 이제부터 서비스를 이용하실 수 있습니다.`);
+            // 등록 성공 후, 사용자를 서비스 메인 페이지 등으로 보낼 수 있습니다.
+            navigate('/calender', { state: { className: selectedClass } });
         } catch (error) {
             console.error('Error during registration:', error);
-            alert('등록 중 오류가 발생했습니다.');
+            let errorMessage = '등록에 실패했습니다.';
+            if (axios.isAxiosError(error) && error.response) {
+                const errorData: ErrorResponse | null = error.response.data;
+                errorMessage = errorData?.message || errorMessage;
+            }
+            alert(errorMessage);
         }
     };
 
