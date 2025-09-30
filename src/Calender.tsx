@@ -46,7 +46,7 @@ function Calender() {
 
         const fetchCalendarData = async () => {
             try {
-                const response = await axios.get<AllCalendarData>('https://alarmback-f9vr6.ondigitalocean.app/calender');
+                const response = await axios.get<AllCalendarData>('/api/calender');
                 const allData = response.data;
                 setContext(allData[className] || []);
             } catch (error) {
@@ -84,7 +84,7 @@ function Calender() {
     const handleSaveToServer = async () => {
         if (!className) return;
         try {
-            await axios.post('https://alarmback-f9vr6.ondigitalocean.app/calender', {
+            await axios.post('/api/calender', {
                 className,
                 events: context
             });

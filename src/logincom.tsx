@@ -38,7 +38,7 @@ function LoginSuccess() {
         }
 
         try {
-            await axios.post('https://alarmback-f9vr6.ondigitalocean.app/register-user', {
+            await axios.post('/api/register-user', {
                 userId: userId,
                 className: selectedClass,
             });
