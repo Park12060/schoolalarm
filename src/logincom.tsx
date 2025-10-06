@@ -45,7 +45,7 @@ function LoginSuccess() {
 
             alert(`[${selectedClass}]으로 등록이 완료되었습니다! 이제부터 서비스를 이용하실 수 있습니다.`);
             // 등록 성공 후, 사용자를 서비스 메인 페이지 등으로 보낼 수 있습니다.
-            navigate('/calender', { state: { className: selectedClass } });
+            navigate('/SubjectLinks');
         } catch (error) {
             console.error('Error during registration:', error);
             let errorMessage = '등록에 실패했습니다.';
