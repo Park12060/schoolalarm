@@ -18,11 +18,6 @@ interface ErrorResponse {
     message: string;
 }
 
-// 전체 캘린더 데이터를 위한 타입 정의
-interface AllCalendarData {
-    [className: string]: CalendarEvent[];
-}
-
 function Calender() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -46,9 +41,8 @@ function Calender() {
 
         const fetchCalendarData = async () => {
             try {
-                const response = await axios.get<AllCalendarData>('/api/calender');
-                const allData = response.data;
-                const classEvents = allData[className];
+                const response = await axios.get<CalendarEvent[]>('/api/calender', { params: { className } });
+                const classEvents = response.data;
                 setContext(Array.isArray(classEvents) ? classEvents : []);
             } catch (error) {
                 console.error('Error fetching calendar data:', error);
