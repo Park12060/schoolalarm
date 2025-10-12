@@ -83,6 +83,7 @@ function Calender() {
                 className,
                 events: context
             });
+            console.log(context)
             alert(`[${className}] 캘린더가 성공적으로 저장되었습니다!`);
         } catch (error) {
             console.error('Error saving calendar:', error);
