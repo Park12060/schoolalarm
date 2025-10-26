@@ -1,10 +1,7 @@
 
-import { useState, type ChangeEvent, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-// 1반부터 12반까지의 배열을 동적으로 생성합니다.
-const classes = Array.from({ length: 12 }, (_, i) => `${i + 1}반`);
 
 // 서버의 오류 응답 형식을 정의합니다.
 interface ErrorResponse {
@@ -17,66 +14,41 @@ function LoginSuccess() {
     const loginStatus = searchParams.get('login');
     const userId = searchParams.get('user_id');
 
-    const [selectedClass, setSelectedClass] = useState(classes[0]);
-
     useEffect(() => {
         // login=success 파라미터와 user_id가 없으면 잘못된 접근으로 처리하여 홈으로 리디렉션
         if (loginStatus !== 'success' || !userId) {
             alert('로그인 정보가 없거나 잘못된 접근입니다. 메인 페이지로 이동합니다.');
             navigate('/');
+            return; // useEffect 훅의 실행을 여기서 중단
         }
+
+        const registerUser = async () => {
+            try {
+                await axios.post('/api/register-user', { userId });
+                alert('등록이 완료되었습니다! 이제부터 서비스를 이용하실 수 있습니다.');
+                // 등록 성공 후, 사용자를 서비스 메인 페이지 등으로 보냅니다.
+                navigate('/SubjectLinks');
+            } catch (error) {
+                console.error('Error during registration:', error);
+                let errorMessage = '등록에 실패했습니다.';
+                if (axios.isAxiosError(error) && error.response) {
+                    const errorData: ErrorResponse | null = error.response.data;
+                    errorMessage = errorData?.message || errorMessage;
+                }
+                alert(errorMessage);
+                // 실패 시 홈으로 보낼 수도 있습니다.
+                navigate('/');
+            }
+        };
+
+        registerUser();
     }, [loginStatus, userId, navigate]);
 
-    const handleClassChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        setSelectedClass(e.target.value);
-    };
-
-    const handleRegister = async () => {
-        if (!userId) {
-            alert('사용자 ID가 없어 등록할 수 없습니다.');
-            return;
-        }
-
-        try {
-            await axios.post('/api/register-user', {
-                userId: userId,
-                className: selectedClass,
-            });
-
-            alert(`[${selectedClass}]으로 등록이 완료되었습니다! 이제부터 서비스를 이용하실 수 있습니다.`);
-            // 등록 성공 후, 사용자를 서비스 메인 페이지 등으로 보낼 수 있습니다.
-            navigate('/SubjectLinks');
-        } catch (error) {
-            console.error('Error during registration:', error);
-            let errorMessage = '등록에 실패했습니다.';
-            if (axios.isAxiosError(error) && error.response) {
-                const errorData: ErrorResponse | null = error.response.data;
-                errorMessage = errorData?.message || errorMessage;
-            }
-            alert(errorMessage);
-        }
-    };
-
-    // useEffect에서 리디렉션이 처리되므로, 렌더링 시에는 로딩 상태나 null을 반환할 수 있습니다.
-    if (loginStatus !== 'success' || !userId) {
-        return null; // 리디렉션이 실행되기 전에 아무것도 렌더링하지 않음
-    }
-
+    // 컴포넌트는 사용자에게 프로세스가 진행 중임을 알리는 메시지를 보여줄 수 있습니다.
     return (
         <div>
-            <h1>환영합니다!</h1>
-            <p>서비스를 이용하려면, 먼저 반을 선택해주세요.</p>
-            <p>사용자 ID: {userId}</p>
-            <div>
-                <select value={selectedClass} onChange={handleClassChange}>
-                    {classes.map(className => (
-                        <option key={className} value={className}>
-                            {className}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <button onClick={handleRegister}>등록하기</button>
+            <h1>등록 처리 중...</h1>
+            <p>사용자 정보를 등록하고 있습니다. 잠시만 기다려주세요.</p>
         </div>
     );
 }

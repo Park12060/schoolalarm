@@ -1,6 +1,5 @@
 
 import { useEffect, useState, type ChangeEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import './App.css'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -19,31 +18,17 @@ interface ErrorResponse {
 }
 
 function Calender() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const className = location.state?.className as string;
-
     const [context, setContext] = useState<CalendarEvent[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [mode, setMode] = useState(0); // 0: add, 1: delete
 
-    // 반 정보가 없으면 로그인 페이지로 리디렉션
+    // 컴포넌트가 마운트될 때 서버에서 캘린더 데이터를 가져옵니다.
     useEffect(() => {
-        if (!className) {
-            alert("잘못된 접근입니다. 로그인 페이지로 이동합니다.");
-            navigate('/login');
-        }
-    }, [className, navigate]);
-
-    // 컴포넌트가 마운트되거나 className이 변경될 때 서버에서 캘린더 데이터를 가져옵니다.
-    useEffect(() => {
-        if (!className) return;
-
         const fetchCalendarData = async () => {
             try {
-                const response = await axios.get<CalendarEvent[]>('/api/calender', { params: { className } });
-                const classEvents = response.data;
-                setContext(Array.isArray(classEvents) ? classEvents : []);
+                const response = await axios.get<CalendarEvent[]>('/api/calender');
+                const calendarData = response.data;
+                setContext(Array.isArray(calendarData) ? calendarData : []);
             } catch (error) {
                 console.error('Error fetching calendar data:', error);
                 setContext([]);
@@ -51,7 +36,7 @@ function Calender() {
         };
 
         fetchCalendarData();
-    }, [className]);
+    }, []);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -77,14 +62,9 @@ function Calender() {
     }
 
     const handleSaveToServer = async () => {
-        if (!className) return;
         try {
-            await axios.post('/api/calender', {
-                className,
-                events: context
-            });
-            console.log(context)
-            alert(`[${className}] 캘린더가 성공적으로 저장되었습니다!`);
+            await axios.post('/api/calender', { events: context });
+            alert(`캘린더가 성공적으로 저장되었습니다!`);
         } catch (error) {
             console.error('Error saving calendar:', error);
             let errorMessage = '캘린더 저장에 실패했습니다.';
@@ -96,14 +76,9 @@ function Calender() {
         }
     };
 
-    // className이 없는 경우 렌더링을 방지
-    if (!className) {
-        return <div>로그인 페이지로 이동 중...</div>;
-    }
-
     return (
         <div>
-            <h1>{className} 캘린더 관리</h1>
+            <h1>캘린더 관리</h1>
             <h2> {mode === 0 ? "추가 모드" : "삭제 모드"}</h2>
             <FullCalendar
                 plugins={[dayGridPlugin, interactionPlugin]}
